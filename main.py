@@ -7,30 +7,41 @@ load_dotenv()
 
 API_TOKEN = os.getenv("API_TOKEN")
 
-# res = requests.post(upload_url, headers=headers, data=payload)
-# res = requests.get(f"{API_URL}/drive/file-entries", headers=headers)
-# data = json.loads(res.text)['data'][0]
-# file_id = data['id']
-# print(file_id)
-
 class SpaceByte:
     def __init__(self, token):
         self.url = "https://spacebyte.in/api/v1"
-        self.headers = {"Authorization": f"Bearer {token}",
-                        'Content-Type' : 'multipart/form-data'}
+        self.headers = {
+            'accept': 'application/json',
+            "Authorization": f"Bearer {token}"
+            }
 
     def upload_video(self, file_path):
         upload_url =  f"{self.url}/uploads"
-        files = {'file': open(file_path, 'rb')}
+        files = {
+            'file': (file_path, open(file_path, 'rb'), 'video/mp4'),
+            'parentId': (None, 'null'),
+            'relativePath': (None, ''),
+        }
         res = requests.post(upload_url, headers=self.headers, files=files)
         return res
 
     def get_shareable_link(self, id):
-        pass
+        url = f"{self.url}/file-entries/{id}/shareable-link"
+        res = requests.get(url, headers=self.headers)
+        print(json.loads(res.text))
+        data = json.loads(res.text)['data']
+        file_name = data['link'][0]['entry']['file_name']
+        link = f"https://spacebyte.in/drive/s/{file_name}"
+        return link
+
+    def file_entries(self):
+        url =  f"{self.url}/drive/file-entries"
+        res = requests.get(url, headers=self.headers)
+        return res
+
 
 
 if __name__ == "__main__":
     sb = SpaceByte(API_TOKEN)
-    res = sb.upload_video("/home/jyt/Pro/SpaceByteAPITest/VIDEOS/500m6.mp4")
-    print(res)
+    
 
